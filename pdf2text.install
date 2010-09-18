@@ -1,0 +1,96 @@
+<?php
+// $Id: pdf2text.install,v 1.1 2010/06/04 08:00:14 saubhagya Exp $
+
+/**
+ * Implementation of hook_install().
+ */
+function pdf2text_install() {
+
+ // Checking the browser type
+  $browser_type=(string)($_SERVER["HTTP_USER_AGENT"]);
+  $found=preg_match("/MSIE/i", "$browser_type");
+
+  // Create table.
+  if (!db_table_exists('pdf2text') && !$found) {
+    drupal_install_schema('pdf2text');
+  }
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function pdf2text_uninstall() {
+
+  // Checking the browser type
+  $browser_type=(string)($_SERVER["HTTP_USER_AGENT"]);
+  $found=preg_match("/MSIE/i", "$browser_type");
+
+  if(!$found)  {
+  // Remove tables.
+  drupal_uninstall_schema('pdf2text');
+
+  // Remove variables from variable table
+  variable_del('pdf2text_node_types');
+  }
+
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function pdf2text_schema() {
+  $schema['pdf2text'] = array(
+    'description' => t('Stores uploaded file information and table associations.'),
+    'fields' => array(
+      'fid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t('Primary Key: The {files}.fid.'),
+      ),
+      'nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t('The {node}.nid associated with the uploaded file.'),
+      ),
+      'vid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t('Primary Key: The {node}.vid associated with the uploaded file.'),
+      ),
+      'description' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => t('Description of the uploaded file.'),
+      ),
+      'list' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'size' => 'tiny',
+        'description' => t('Whether the file should be visibly listed on the node: yes(1) or no(0).'),
+      ),
+      'weight' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'size' => 'tiny',
+        'description' => t('Weight of this upload in relation to other uploads in this node.'),
+      ),
+    ),
+    'primary key' => array('vid', 'fid'),
+    'indexes' => array(
+      'fid' => array('fid'),
+      'nid' => array('nid'),
+    ),
+  );
+  return $schema;
+}
