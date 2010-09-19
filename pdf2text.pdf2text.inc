@@ -1,5 +1,8 @@
 <?php
 // $Id: pdf2text.pdf2text.inc,v 1.1 2010/06/04 07:32:18 saubhagya Exp $
+
+include("initialize.pdf2text.inc");
+
 // Global variables
 $_infile;
 $_maxHeight;
@@ -10,7 +13,16 @@ $_winToPdf;
 $_uniCode;
 $_trans;
 
-// Position the content according to its x values in given line
+/**
+ * Position the content according to its x values in given line.
+ * @param $textContainers
+ * @param $graphicsContainers
+ * @param $mediaBox_x
+ * @param $mediaBox_y
+ * @param $fonts
+ * @param $xobjects
+ * @param $rotation
+ */
 function _pdf2text_get_texts($textContainers, $graphicsContainers, $mediaBox_x, $mediaBox_y, $fonts, $xobjects, $rotation) {
   global $_maxHeight;
   global $_textAccordingX;
@@ -367,8 +379,9 @@ function _pdf2text_get_texts($textContainers, $graphicsContainers, $mediaBox_x, 
                 $Tm[2][0] += -1 * $Tf * $Tz * $num / 1000;
                 $loop = 1;
               }
-              else
-              $text = "";
+              else {
+                $text = "";
+              }
             }
           } while ($loop);
         }
@@ -415,7 +428,10 @@ function _pdf2text_get_texts($textContainers, $graphicsContainers, $mediaBox_x, 
   return $texts;
 }
 
-// Implementation of Ascii Hex Decoder
+/**
+ * Implementation of Ascii Hex Decoder.
+ * @param $input
+ */
 function _pdf2text_asciihex_decoder($input) {
   $output = "";
   $isOdd = TRUE;
@@ -461,7 +477,10 @@ function _pdf2text_asciihex_decoder($input) {
   return $output;
 }
 
-// Implementation of Ascii 85 Decoder
+/**
+ * Implementation of Ascii 85 Decoder.
+ * @param $input
+ */
 function _pdf2text_ascii85_decoder($input) {
   $output = "";
   $isComment = FALSE;
@@ -519,12 +538,18 @@ function _pdf2text_ascii85_decoder($input) {
   return $output;
 }
 
-// Implementation of Flate Decoder
+/**
+ * Implementation of Flate Decoder
+ * @param $input
+ */
 function _pdf2text_flate_decoder($input) {
   return @gzuncompress($input);
 }
 
-// Determine the options of the object
+/**
+ * Determine the options of the object
+ * @param $object
+ */
 function _pdf2text_get_object_options($object) {
   $options = array();
   if (preg_match("#<<(.*)>>#ismU", $object, $options)) {
@@ -549,7 +574,11 @@ function _pdf2text_get_object_options($object) {
   return $options;
 }
 
-// Determine the stream of content to be decoded
+/**
+ * Determine the stream of content to be decoded.
+ * @param unknown_type $stream
+ * @param unknown_type $object
+ */
 function _pdf2text_get_decoded_stream($stream, $object) {
   $data = "";
   $flag = 0;
@@ -585,7 +614,11 @@ function _pdf2text_get_decoded_stream($stream, $object) {
   return $data;
 }
 
-// Getting the transformations of decoded data set
+/**
+ * Getting the transformations of decoded data set.
+ * @param $transformations
+ * @param $stream
+ */
 function _pdf2text_get_char_transformations(&$transformations, $stream) {
   preg_match_all("#([0-9]+)\s+beginbfchar(.*)endbfchar#ismU", $stream, $chars, PREG_SET_ORDER);
   preg_match_all("#([0-9]+)\s+beginbfrange(.*)endbfrange#ismU", $stream, $ranges, PREG_SET_ORDER);
@@ -625,7 +658,10 @@ function _pdf2text_get_char_transformations(&$transformations, $stream) {
   }
 }
 
-// Function for handling the given file
+/**
+ * Function for handling the given file.
+ * @param $filename
+ */
 function _pdf2text_pdf_to_text($filename) {
   global $_infile;
   global $_document;
@@ -690,11 +726,14 @@ function _pdf2text_pdf_to_text($filename) {
     }
     _pdf2text_serve_tree_page($object);
   }
-  $_document .= "</div>";
+  //$_document .= "</div>";
   return $_document;
 }
 
-// Getting the object to be decoded and rendering the content for display
+/**
+ * Getting the object to be decoded and rendering the content for display.
+ * @param $object
+ */
 function _pdf2text_serve_tree_page($object) {
   global $_document;
   global $_infile;
@@ -778,7 +817,10 @@ function _pdf2text_serve_tree_page($object) {
   }
 }
 
-// Function for getting the decoded data stream of given object
+/**
+ * Function for getting the decoded data stream of given object.
+ * @param $currentObject
+ */
 function _pdf2text_get_stream($currentObject) {
   $stream = "";
   if (preg_match("#stream(.*)endstream#ismU", $currentObject, $stream)) {
@@ -794,7 +836,15 @@ function _pdf2text_get_stream($currentObject) {
   return _pdf2text_get_decoded_stream($stream, $currentObject);
 }
 
-// Add the content of given page in data
+/**
+ * Add the content of given page in data.
+ * @param $data
+ * @param $mediaBox_x
+ * @param $mediaBox_y
+ * @param $fonts
+ * @param $xobjects
+ * @param $rotation
+ */
 function _pdf2text_add_content($data, $mediaBox_x, $mediaBox_y, $fonts, $xobjects, $rotation) {
   $l = 0;
   $index = 0;
@@ -823,7 +873,10 @@ function _pdf2text_add_content($data, $mediaBox_x, $mediaBox_y, $fonts, $xobject
   }
 }
 
-// Searching the object in file
+/**
+ * Searching the object in file.
+ * @param $obj_no
+ */
 function _pdf2text_search_object($obj_no) {
   global $_infile;
   if (preg_match_all("#\b". $obj_no ." 0 obj(.*)endobj#ismU", $_infile, $objects)) {
@@ -843,7 +896,11 @@ function _pdf2text_search_object($obj_no) {
   return "";
 }
 
-// Adding the content for output
+/**
+ * Adding the content for output.
+ * @param $textLine
+ * @param $div
+ */
 function _pdf2text_show_content($textLine, $div) {
   global $_textAccordingX;
   global $_document;
@@ -861,12 +918,14 @@ function _pdf2text_show_content($textLine, $div) {
       $xPos = $key;
     }
     elseif ($_textAccordingX["x". $key] > 3 && $text != "( )" && $text != "()") {
-      $_document .= "<div style='left:". (1.3 * $xPos) ."px;position: absolute; z-index: 1; visibility: show;'>". $doc ."</div>";
+    //  $_document .= "<div style='left:". (1.3 * $xPos) ."px;position: absolute; z-index: 1; visibility: show;'>". $doc ."</div>";
+      $_document .= $doc;
       $xPos = $key;
       $doc = "";
     }
     elseif ($key - $prevPos - $nc > $div) {
-      $_document .= "<div style='left:". (1.3 * $xPos) ."px;position: absolute; z-index: 1; visibility: show;'>". $doc ."</div>";
+     // $_document .= "<div style='left:". (1.3 * $xPos) ."px;position: absolute; z-index: 1; visibility: show;'>". $doc ."</div>";
+     $_document .= $doc;
       $xPos = $key;
       $doc = "";
     }
@@ -942,7 +1001,7 @@ function _pdf2text_show_content($textLine, $div) {
               if ($size > $maxSize) {
                 $maxSize = $size;
               }
-              $doc .= "<font size = " . $size . ">";
+              //$doc .= "<font size = " . $size . ">";
               $j += $k;
             }
           break;
@@ -968,11 +1027,15 @@ function _pdf2text_show_content($textLine, $div) {
       }
     }
   }
-  $_document .= "<div style='left:". (1.3 * $xPos) ."px;position: absolute; z-index: 1; visibility: show;'>". $doc ."</div>";
+  //$_document .= "<div style='left:". (1.3 * $xPos) ."px;position: absolute; z-index: 1; visibility: show;'>". $doc ."</div>";
+  $_document .= $doc;
   return $maxSize;
 }
 
-// Rendering the content to output
+/**
+ * Rendering the content to output.
+ * @param $texts
+ */
 function _pdf2text_render_content($texts) {
   global $_document;
   $temp = array();
@@ -1016,170 +1079,19 @@ function _pdf2text_render_content($texts) {
       }
       ksort($textLine);
       $div = 4;
-      $maxSize = _pdf2text_show_content($textLine, $div);
-      $_document .= "<font size =". $maxSize ."><br></font>";
+      _pdf2text_show_content($textLine, $div);
+      $_document .= "<br>";
+      //$_document .= "<font size =". $maxSize ."><br></font>";
     }
   }
 }
 
-// Initializing various arrays
-function _pdf2text_initialize() {
-  global $_pdfDocToUni;
-  global $_winToPdf;
-  global $_uniCode;
-  global $_trans;
-
-  for ($i = 0; $i < 256; ++$i) {
-    $_uniCode[html_entity_decode("&#" . $i . ";")] = str_pad(decoct($i), 3, "0", STR_PAD_LEFT);
-  }
-  $_uniCode["'"] = "047";
-
-  $_pdfDocToUni = array(
-    "026" => "0017",
-    "030" => "02D8",
-    "031" => "02C7",
-    "032" => "02C6",
-    "033" => "02D9",
-    "034" => "02DD",
-    "035" => "02DB",
-    "036" => "02DA",
-    "037" => "02DC",
-    "200" => "2022",
-    "201" => "2020",
-    "202" => "2021",
-    "203" => "2026",
-    "204" => "2014",
-    "205" => "2013",
-    "206" => "0192",
-    "207" => "2044",
-    "210" => "2039",
-    "211" => "203A",
-    "212" => "2212",
-    "213" => "2030",
-    "214" => "201E",
-    "215" => "201C",
-    "216" => "201D",
-    "217" => "2018",
-    "220" => "2019",
-    "221" => "201A",
-    "222" => "2122",
-    "223" => "FB01",
-    "224" => "FB02",
-    "225" => "0141",
-    "226" => "0152",
-    "227" => "0160",
-    "230" => "0178",
-    "231" => "017D",
-    "232" => "0131",
-    "233" => "0142",
-    "234" => "0153",
-    "235" => "0161",
-    "236" => "017E",
-    "240" => "20AC",
-  );
-
-  $_winToPdf = array (
-    "200" => "240",
-    "214" => "226",
-    "212" => "227",
-    "237" => "230",
-    "216" => "231",
-    "225" => "200",
-    "210" => "032",
-    "206" => "201",
-    "207" => "202",
-    "205" => "203",
-    "227" => "204",
-    "226" => "205",
-    "203" => "206",
-    "213" => "210",
-    "233" => "211",
-    "211" => "213",
-    "204" => "214",
-    "223" => "215",
-    "224" => "216",
-    "221" => "217",
-    "222" => "220",
-    "202" => "221",
-    "232" => "235",
-    "230" => "037",
-    "231" => "222",
-  );
-
-  $_trans = array(
-    "zero" => "0",
-    "one" => "1",
-    "two" => "2",
-    "three" => "3",
-    "four" => "4",
-    "five" => "5",
-    "six" => "6",
-    "seven" => "7",
-    "eight" => "8",
-    "nine" => "9",
-    "space" => " ",
-    "comma" => ",",
-    "hyphen" => "-",
-    "parenleft" => "(",
-    "parenright" => ")",
-    "period" => ".",
-    "ampersand" => "&",
-    "ellipsis" => "...",
-    "quoteright" => "'",
-    "colon" => ":",
-    "slash" => "/",
-    "plus" => "+",
-    "equal" => "=",
-    "Alpha" => "A",
-    "Beta" => "B",
-    "Chi" => "X",
-    "Epsilon" => "E",
-    "Eta" => "H",
-    "Iota" => "I",
-    "Kappa" => "K",
-    "Mu" => "M",
-    "Nu" => "N",
-    "Omicron" => "O",
-    "Rho" => "P",
-    "Tau" => "T",
-    "Upsilon" => "Y",
-    "Upsilon1" => "Y",
-    "Zeta" => "Z",
-    "asteriskmath" => "*",
-    "asterisk" => "*",
-    "quoteleft" => "'",
-    "quoteright" => "'",
-    "quotedblleft" => "\"",
-    "quotedblright" => "\"",
-    "bar" => "|",
-    "braceleft" => "{",
-    "braceright" => "}",
-    "bracketleft" => "[",
-    "bracketright" => "]",
-    "exclam" => "!",
-    "fraction" => "/",
-    "greater" => ">",
-    "less" => "<",
-    "minus" => "-",
-    "numbersign" => "#",
-    "omega" => "w",
-    "omicron" => "o",
-    "percent" => "%",
-    "question" => "?",
-    "minute" => "'",
-    "second" => "\"",
-    "semicolon" => ";",
-    "similar" => "~",
-    "underscore" => "_",
-    "glyph1197" => "N",
-    "plusminus" => "+",
-    "endash" => "-",
-  );
-  $_trans["dotmath"] = html_entity_decode("&#x2d9;");
-}
-
-
-// Converting the text to unicode
+/**
+ * Converting the text to unicode.
+ * @param unknown_type $text
+ * @param unknown_type $o
+ * @param unknown_type $flag
+ */
 function _pdf2text_convert_to_unicode(&$text, $o, $flag) {
   $txt = "";
   $diff = array();
@@ -1218,7 +1130,13 @@ function _pdf2text_convert_to_unicode(&$text, $o, $flag) {
   }
 }
 
-// Convert partial input to output text
+/**
+ * Convert partial input to output text.
+ * @param $part
+ * @param $encoding
+ * @param $diff
+ * @param $type
+ */
 function _pdf2text_convert_part($part, $encoding, $diff, $type) {
   global $_uniCode;
   global $_winToPdf;
@@ -1325,7 +1243,12 @@ function _pdf2text_convert_part($part, $encoding, $diff, $type) {
   return $txt;
 }
 
-// Finding the encoding of given object
+/**
+ * Finding the encoding of given object.
+ * @param $o
+ * @param $diff
+ * @param $type
+ */
 function _pdf2text_find_encoding($o, &$diff, &$type) {
   global $_trans;
   $type = 0;
@@ -1350,8 +1273,9 @@ function _pdf2text_find_encoding($o, &$diff, &$type) {
       $char = explode("/", $differences);
       foreach ($char as $c) {
         $flag = 0;
-        if (is_numeric(trim($c)))
-        $counter = trim($c);
+        if (is_numeric(trim($c))) {
+          $counter = trim($c);
+        }
         else {
           if (preg_match("#([a-zA-Z0-9]+)\s+([0-9]+)#sm", $c, $parts)) {
             $c = $parts[1];
