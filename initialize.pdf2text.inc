@@ -4,7 +4,7 @@
 /**
  * Initializing various arrays.
  */
-function _pdf2text_initialize() {
+function pdf2text_initialize() {
   global $_pdfDocToUni;
   global $_winToPdf;
   global $_uniCode;
