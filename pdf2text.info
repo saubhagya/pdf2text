@@ -1,6 +1,6 @@
 ; $Id: pdf2text.info,v 1.1 2010/06/04 08:00:14 saubhagya Exp $
 name = Pdf-To-Text
-description = Allows users to upload and display pdf files.
+description = Allows users to upload and display PDF files.
 package = Upload Extension
 version = VERSION
 core = 6.x
