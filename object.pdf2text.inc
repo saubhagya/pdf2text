@@ -7,7 +7,7 @@ class Object {
   private $dictionary;
 
   public function __construct($data) {
-    $this->data = $data;
+    $this->data = trim($data);
     $dictionaryData = "";
 
     if (preg_match("#<<(.*)>>$#sm", $this->data, $match)) {

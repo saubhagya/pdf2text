@@ -9,6 +9,7 @@ class Dictionary {
   public function __construct($data) {
     if (isDictionaryType($data)) {
       $this->dictionary = trim(substr($data, 2, strlen($data) - 4));
+      $this->dictionary = preg_replace("#\n#s", " ", $this->dictionary);
       $this->setProperties();
     }
   }
@@ -39,7 +40,7 @@ class Dictionary {
         $openBrace -= 1;
         $token .= $ch;
       }  elseif ($state == 1) {
-        if ($ch == " " || $ch == "\n") {
+        if ($ch == " ") {
           $state = 2;
           if (trim($token) != "") {
             $tokens[] = trim($token);
@@ -49,9 +50,6 @@ class Dictionary {
           $token .= $ch;
         }
       } else {
-        if ($ch == "\n") {
-          $ch = " ";
-        }
         $token .= $ch;
       }
     }

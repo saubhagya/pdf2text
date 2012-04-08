@@ -11,6 +11,7 @@ class Pdf {
   public function __construct($filename) {
     $this->file = @file_get_contents($filename);
     $this->text = "";
+    $this->file = preg_replace("#(\r\n|\r)#s", "\n", $this->file);
   }
 
   private function getObject($objNo) {
@@ -32,7 +33,10 @@ class Pdf {
     }
     for ($i = count($trailerDictionaries) - 1; $i >= 0; $i--) {
       $trailerDictionary = new Dictionary("<< " . $trailerDictionaries[$i] . " >>");
-      return $trailerDictionary->getProperty("Root");
+      $root = $trailerDictionary->getProperty("Root");
+      if (!empty($root)) {
+        return $root;
+      }
     }
     return "";
   }
