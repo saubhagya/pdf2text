@@ -11,7 +11,7 @@ class Pdf {
   public function __construct($filename) {
     $this->file = @file_get_contents($filename);
     $this->text = "";
-    $this->file = preg_replace("#(\r\n|\r)#s", "\n", $this->file);
+    $this->file = preg_replace("#(\r\n)#s", "\n", $this->file);
   }
 
   private function getObject($objNo) {
