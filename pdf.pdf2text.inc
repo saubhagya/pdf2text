@@ -7,15 +7,13 @@ require_once "pdfArray.pdf2text.inc";
 class Pdf {
   private $file;
   private $text;
-  private $objects = array();
 
   public function __construct($filename) {
     $this->file = @file_get_contents($filename);
     $this->text = "";
-    $this->setObjects();
   }
 
-  private function setObject($objNo) {
+  private function getObject($objNo) {
     if ($objStartPos = strrpos($this->file, "\n" . $objNo . " 0 obj")) {
       $tailFile = substr($this->file, $objStartPos);
       if ($objEndPos = strpos($tailFile, "endobj")) {
@@ -24,16 +22,6 @@ class Pdf {
       }
     }
     return "";
-  }
-
-  private function setObjects() {
-    $pattern = "#([0-9]+) 0 obj#";
-    $subject = $this->file;
-
-    preg_match_all($pattern, $subject, $matches);
-    foreach ($matches[1] as $objNo) {
-      $this->objects[$objNo] = $this->setObject($objNo);
-    }
   }
 
   private function getRoot() {
@@ -78,7 +66,7 @@ class Pdf {
   }
 
   private function servePageObject($pageNo) {
-    $pageObject = $this->objects[$pageNo];
+    $pageObject = $this->getObject($pageNo);
     $pageDictionary = $pageObject->getDictionary();
     $contents = $pageDictionary->getProperty("Contents");
     $kids = $pageDictionary->getProperty("Kids");
@@ -90,11 +78,11 @@ class Pdf {
         $contentArrElements = $contentArr->getElements();
         foreach ($contentArrElements as $contentArrElement) {
           $contentPageNo = $this->getIndirectObjNo($contentArrElement);
-          $data .= $this->objects[$contentPageNo]->getDecodedStream();
+          $data .= $this->getObject($contentPageNo)->getDecodedStream();
         }
       } else {
         $contentPageNo = $this->getIndirectObjNo($contents);
-        $data .= $this->objects[$contentPageNo]->getDecodedStream();
+        $data .= $this->getObject($contentPageNo)->getDecodedStream();
       }
       $this->addContent($data);
     }
@@ -117,7 +105,7 @@ class Pdf {
   public function getText() {
     $root = $this->getRoot();
     $rootObjNo = $this->getIndirectObjNo($root);
-    $rootObj = $this->objects[$rootObjNo];
+    $rootObj = $this->getObject($rootObjNo);
     $rootObjDictionary = $rootObj->getDictionary();
 
     $pages = $rootObjDictionary->getProperty("Pages");
