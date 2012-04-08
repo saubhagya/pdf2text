@@ -1,8 +1,6 @@
 <?php
-// $Id: pdf2text.module,v 1.1 2010/06/04 08:00:14 saubhagya Exp $
 
-// Including the file with the code for conversion of pdf into html
-include("pdf2text.pdf2text.inc");
+require_once "pdf.pdf2text.inc";
 
 /**
  * @file
@@ -323,7 +321,8 @@ function pdf2text_node_form_submit(&$form, &$form_state) {
 
     //set the contents of the file as the body of the node
     $file_path = file_directory_path()."/".$file->filename;
-    $file_content = (string)pdf2text_pdf_to_text($file_path, $selected);
+    $pdf = new Pdf($file_path);
+    $file_content = (string)$pdf->getText();
     $content = $body_content = (string)$form_state['values']['body'];
 
     $len5 = strlen($file_content);
