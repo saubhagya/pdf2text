@@ -112,7 +112,7 @@ class Decoder {
   }
 
   public function __construct($data) {
-    $this->data = $data;
+    $this->data = trim($data);
   }
 
   public function decode($filter) {

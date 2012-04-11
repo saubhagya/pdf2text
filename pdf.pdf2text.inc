@@ -3,6 +3,8 @@
 require_once "object.pdf2text.inc";
 require_once "dictionary.pdf2text.inc";
 require_once "pdfArray.pdf2text.inc";
+require_once "textContainer.pdf2text.inc";
+require_once "fontObject.pdf2text.inc";
 
 class Pdf {
   private $file;
@@ -11,11 +13,11 @@ class Pdf {
   public function __construct($filename) {
     $this->file = @file_get_contents($filename);
     $this->text = "";
-    $this->file = preg_replace("#(\r\n)#s", "\n", $this->file);
   }
 
   private function getObject($objNo) {
-    if ($objStartPos = strrpos($this->file, "\n" . $objNo . " 0 obj")) {
+    if (!empty($objNo) && (($objStartPos = strrpos($this->file, "\n" . $objNo . " 0 obj")) || 
+           ($objStartPos = strrpos($this->file, "\r" . $objNo . " 0 obj")))) {
       $tailFile = substr($this->file, $objStartPos);
       if ($objEndPos = strpos($tailFile, "endobj")) {
         $object = new Object(substr($tailFile, 0, $objEndPos));
@@ -41,30 +43,17 @@ class Pdf {
     return "";
   }
 
-  private function getIndirectObjNo($string) {
-    if (preg_match("#([0-9]+) 0 R#", $string, $match)) {
-      return $match[1];
-    }
-    return "";
+  private function getContent($textObject, $fontObjNo) {
+    $fontObj = new FontObject($this->getObject($fontObjNo));
+    $textContainer = new TextContainer($textObject, $fontObj);
+    return $textContainer->getText();
   }
 
-  private function getContent($textContainer) {
-    $text = "";
-
-    if (preg_match_all("#\((.*)\)#smU", $textContainer, $matches)) {
-      $contents = $matches[1];
-      foreach ($contents as $content) {
-        $text .= $content;
-      }
-    }
-    return $text;
-  }
-
-  private function addContent($content) {
+  private function addContent($content, $fontObjNo) {
     if (preg_match_all("#\bBT(.*)\bET#smU", $content, $matches)) {
-      $textContainers = $matches[1];
-      foreach ($textContainers as $textContainer) {
-        $this->text .= $this->getContent($textContainer) . "<br>";
+      $textObjects = $matches[1];
+      foreach ($textObjects as $textObject) {
+        $this->text .= $this->getContent($textObject, $fontObjNo) . "<br />";
       }
     }
   }
@@ -74,21 +63,28 @@ class Pdf {
     $pageDictionary = $pageObject->getDictionary();
     $contents = $pageDictionary->getProperty("Contents");
     $kids = $pageDictionary->getProperty("Kids");
-    $data = "";
 
     if (!empty($contents)) {
+      $resources = new Dictionary($pageDictionary->getProperty("Resources"));
+      $font = $resources->getProperty("Font");
+      $fontObjNo = "";
+      if (!empty($font)) {
+        $fontObjNo = getIndirectObjNo($font);
+      }
+      $data = "";
+      
       if (isArrayType($contents)) {
         $contentArr = new PdfArray($contents);
         $contentArrElements = $contentArr->getElements();
         foreach ($contentArrElements as $contentArrElement) {
-          $contentPageNo = $this->getIndirectObjNo($contentArrElement);
+          $contentPageNo = getIndirectObjNo($contentArrElement);
           $data .= $this->getObject($contentPageNo)->getDecodedStream();
         }
       } else {
-        $contentPageNo = $this->getIndirectObjNo($contents);
+        $contentPageNo = getIndirectObjNo($contents);
         $data .= $this->getObject($contentPageNo)->getDecodedStream();
       }
-      $this->addContent($data);
+      $this->addContent($data, $fontObjNo);
     }
 
     if (!empty($kids)) {
@@ -96,11 +92,11 @@ class Pdf {
         $kidsArr = new PdfArray($kids);
         $kidsArrElements = $kidsArr->getElements();
         foreach ($kidsArrElements as $kidsArrElement) {
-          $kidPageNo = $this->getIndirectObjNo($kidsArrElement);
+          $kidPageNo = getIndirectObjNo($kidsArrElement);
           $this->servePageObject($kidPageNo);
         }
       } else {
-        $kidPageNo = $this->getIndirectObjNo($kids);
+        $kidPageNo = getIndirectObjNo($kids);
         $this->servePageObject($kidPageNo);
       }
     }
@@ -108,7 +104,7 @@ class Pdf {
 
   public function getText() {
     $root = $this->getRoot();
-    $rootObjNo = $this->getIndirectObjNo($root);
+    $rootObjNo = getIndirectObjNo($root);
     $rootObj = $this->getObject($rootObjNo);
     $rootObjDictionary = $rootObj->getDictionary();
 
@@ -116,7 +112,7 @@ class Pdf {
     $type = $rootObjDictionary->getProperty("Type");
 
     if ($type == "Catalog"  && !empty($pages)){
-      $pageNo = $this->getIndirectObjNo($pages);
+      $pageNo = getIndirectObjNo($pages);
       $this->servePageObject($pageNo);
     }
     return $this->text;

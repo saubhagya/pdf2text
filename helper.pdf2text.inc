@@ -18,3 +18,10 @@ function isDictionaryType($value) {
   }
   return false;
 }
+
+function getIndirectObjNo($string) {
+  if (preg_match("#([0-9]+) 0 R#", $string, $match)) {
+    return $match[1];
+  }
+  return "";
+}

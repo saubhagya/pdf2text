@@ -22,6 +22,10 @@ class PdfArray {
       $this->elements = explode(" ", $this->array);
     }
   }
+  
+  public function isEmpty() {
+    return ($this->array == "") ? true : false;
+  }
 
   public function getElements() {
     return $this->elements;

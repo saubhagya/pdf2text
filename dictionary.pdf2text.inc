@@ -67,6 +67,10 @@ class Dictionary {
       $this->properties[$tokens[$i]] = $tokens[$i + 1];
     }
   }
+  
+  public function isEmpty() {
+    return ($this->dictionary == "") ? true : false;
+  }
 
   public function getProperty($property) {
     if (isset($this->properties[$property])) {

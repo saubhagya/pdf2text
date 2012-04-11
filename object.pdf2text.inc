@@ -22,9 +22,13 @@ class Object {
     $stream_start_pos = strpos($this->data, "stream");
     $stream_end_pos = strpos($this->data, "endstream");
     if ($stream_start_pos !== FALSE && $stream_end_pos !== FALSE) {
-      $stream = ltrim(substr($this->data, $stream_start_pos + 6, $stream_end_pos - $stream_start_pos - 6));
+      $stream = trim(substr($this->data, $stream_start_pos + 6, $stream_end_pos - $stream_start_pos - 6));
     }
     return $stream;
+  }
+  
+  public function isEmpty() {
+    return ($this->data == "") ? true : false;
   }
 
   public function getData() {
